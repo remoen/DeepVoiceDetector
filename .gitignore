@@ -1,7 +1,11 @@
 data
+preprocessed_data
 models
+models (before add data)
 
 .idea
 .vscode
+.gitignore
 
 fig.py
+test.py

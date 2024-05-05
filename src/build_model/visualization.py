@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 
-def visualization(history, f1_callback):
+def visualization(history):
     plt.figure(figsize=(18, 6))
     plt.subplot(1, 3, 1)
     plt.plot(history.history['accuracy'], label='Training Accuracy')
@@ -20,8 +20,8 @@ def visualization(history, f1_callback):
     plt.legend()
 
     plt.subplot(1, 3, 3)
-    plt.plot(f1_callback.train_f1_scores, label='Training F1 Score')
-    plt.plot(f1_callback.val_f1_scores, label='Validation F1 Score')
+    plt.plot(history.history['f1_score'], label='Training F1 Score')
+    plt.plot(history.history['val_f1_score'], label='Validation F1 Score')
     plt.title('Training and Validation F1 Score')
     plt.xlabel('Epoch')
     plt.ylabel('F1 Score')

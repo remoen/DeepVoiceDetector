@@ -1,20 +1,27 @@
-import numpy as np
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+import tensorflow as tf
+
+tf.get_logger().setLevel('WARNING')
+
 from keras.api.callbacks import ModelCheckpoint, EarlyStopping
-from sklearn.metrics import f1_score
+from keras.api.metrics import F1Score
 
 from build_model import build_model
-from callbacks import F1ScoreCallback
-from data_processing import preprocess_data
+from load_data import create_dataset
 from visualization import visualization
 
-train_directory = '../../data/train'
-test_directory = '../../data/test'
+train_directory = '../../preprocessed_data/train'
+validation_directory = '../../preprocessed_data/validation'
 
-X_train, y_train = preprocess_data(train_directory, augment=True)
-X_test, y_test = preprocess_data(test_directory)
+train_dataset = create_dataset(train_directory)
+validation_dataset = create_dataset(validation_directory)
 
-model = build_model(input_shape=(128, 128, 1), num_classes=2)
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model = build_model(input_shape=(128, 128, 1))
+model.compile(optimizer='adam', loss='categorical_crossentropy',
+              metrics=['accuracy', F1Score(average='macro', threshold=0.5)])
 
 # 콜백
 checkpoint = ModelCheckpoint(
@@ -32,25 +39,13 @@ early_stop = EarlyStopping(
     verbose=1
 )
 
-f1_callback = F1ScoreCallback(training_data=(X_train, y_train), validation_data=(X_test, y_test))
-
 # 학습
 history = model.fit(
-    X_train, y_train,
-    batch_size=128,
+    train_dataset,
     epochs=100,
-    validation_data=(X_test, y_test),
-    callbacks=[checkpoint, early_stop, f1_callback]
+    validation_data=validation_dataset,
+    callbacks=[checkpoint, early_stop]
 )
 
-# 모델 평가
-y_pred = np.argmax(model.predict(X_test), axis=1)
-y_true = np.argmax(y_test, axis=1)
-test_loss, test_acc = model.evaluate(X_test, y_test)
-f1 = f1_score(y_true, y_pred, average='macro')
-print(f"\nTest Accuracy: {test_acc}")
-print(f"Test Loss: {test_loss}")
-print(f'Test F1 Score: {f1:.4f}')
-
 # 결과 시각화
-visualization(history, f1_callback)
+visualization(history)
